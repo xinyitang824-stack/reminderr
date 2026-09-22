@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>记事 · 重要事务与提醒</title>
+<style>
+  :root{
+    --ink:#141414;
+    --ink-soft:#4a4a4a;
+    --ink-faint:#9a9a9a;
+    --paper:#ffffff;
+    --paper-2:#f4f4f2;
+    --line:#e6e6e3;
+    --blue:#2b6cb0;
+    --blue-deep:#1e4e8c;
+    --blue-tint:#e8f0f8;
+    /* 莫兰迪色系 */
+    --morn-sage:#a3b39a;
+    --morn-rose:#c9a9a6;
+    --morn-sand:#cbb9a0;
+    --morn-mist:#9fb0bd;
+    --morn-lilac:#b4a8bd;
+    --morn-clay:#c2a49b;
+    --danger:#b0524a;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(20,20,20,.05),0 8px 24px rgba(20,20,20,.07);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+    background:var(--paper-2);
+    color:var(--ink);
+    line-height:1.6;
+    min-height:100vh;
+  }
+  /* 顶部导航 */
+  header{
+    position:sticky;top:0;z-index:50;
+    background:rgba(255,255,255,.88);
+    backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav{
+    max-width:1060px;margin:0 auto;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 24px;
+  }
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand-mark{
+    width:34px;height:34px;border-radius:10px;
+    background:var(--ink);color:#fff;
+    display:grid;place-items:center;font-weight:700;font-size:15px;letter-spacing:1px;
+  }
+  .brand h1{font-size:18px;font-weight:700;letter-spacing:.5px}
+  .brand small{display:block;font-size:11px;color:var(--ink-faint);font-weight:400;letter-spacing:2px}
+  .nav-actions{display:flex;align-items:center;gap:10px}
+  /* 时钟 */
+  .clock{text-align:right;margin-right:6px}
+  .clock b{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+  .clock span{display:block;font-size:11px;color:var(--ink-faint)}
+  /* 按钮 */
+  .btn{
+    border:none;cursor:pointer;border-radius:10px;
+    font-size:13.5px;font-weight:500;
+    padding:9px 16px;
+    transition:all .18s ease;
+    font-family:inherit;
+    display:inline-flex;align-items:center;gap:6px;
+  }
+  .btn-dark{background:var(--ink);color:#fff}
+  .btn-dark:hover{background:#000;transform:translateY(-1px)}
+  .btn-blue{background:var(--blue);color:#fff}
+  .btn-blue:hover{background:var(--blue-deep);transform:translateY(-1px)}
+  .btn-ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--line)}
+  .btn-ghost:hover{border-color:var(--ink);color:var(--ink)}
+  .btn-sm{padding:6px 12px;font-size:12.5px;border-radius:8px}
+  .icon-btn{
+    width:32px;height:32px;border-radius:8px;border:none;cursor:pointer;
+    background:transparent;color:var(--ink-faint);font-size:15px;
+    display:grid;place-items:center;transition:all .15s;
+  }
+  .icon-btn:hover{background:var(--paper-2);color:var(--ink)}
+  /* 主体布局 */
+  .wrap{max-width:1060px;margin:0 auto;padding:28px 24px 80px}
+  /* 统计卡片 */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+  .stat{
+    background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px 20px;position:relative;overflow:hidden;
+  }
+  .stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:4px 0 0 4px}
+  .stat-1::before{background:var(--blue)}
+  .stat-2::before{background:var(--morn-clay)}
+  .stat-3::before{background:var(--morn-sage)}
+  .stat-4::before{background:var(--ink)}
+  .stat b{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;display:block}
+  .stat span{font-size:12px;color:var(--ink-faint);letter-spacing:1px}
+  /* 表单卡片 */
+  .card{
+    background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);margin-bottom:24px;
+  }
+  .card-head{padding:18px 22px 0;display:flex;align-items:center;justify-content:space-between}
+  .card-head h2{font-size:15px;font-weight:600;letter-spacing:.5px}
+  .card-head .hint{font-size:12px;color:var(--ink-faint)}
+  .form{padding:16px 22px 20px;display:grid;gap:12px}
+  .form-row{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:12px}
+  .field{display:flex;flex-direction:column;gap:5px}
+  .field label{font-size:11.5px;color:var(--ink-faint);letter-spacing:1px;font-weight:500}
+  input[type=text],input[type=datetime-local],select,textarea{
+    font-family:inherit;font-size:14px;color:var(--ink);
+    border:1px solid var(--line);border-radius:10px;
+    padding:10px 12px;background:#fff;outline:none;
+    transition:border-color .15s,box-shadow .15s;width:100%;
+  }
+  input:focus,select:focus,textarea:focus{
+    border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-tint);
+  }
+  input::placeholder{color:#bbb}
+  /* 优先级胶囊选择 */
+  .prio-group{display:flex;gap:8px;flex-wrap:wrap}
+  .prio-opt{
+    border:1px solid var(--line);background:#fff;border-radius:999px;
+    padding:7px 14px;font-size:12.5px;cursor:pointer;color:var(--ink-soft);
+    display:flex;align-items:center;gap:7px;transition:all .15s;font-family:inherit;
+  }
+  .prio-opt .dot{width:8px;height:8px;border-radius:50%}
+  .prio-opt.active{border-color:var(--ink);background:var(--ink);color:#fff;font-weight:500}
+  .dot-d1{background:var(--morn-clay)} .dot-d2{background:var(--morn-mist)} .dot-d3{background:var(--morn-sage)}
+  .prio-opt.active .dot{outline:2px solid rgba(255,255,255,.6);outline-offset:1px}
+  /* 工具栏 */
+  .toolbar{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+  .search{
+    flex:1;min-width:220px;position:relative;
+  }
+  .search input{padding-left:36px}
+  .search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink-faint)}
+  .seg{
+    display:flex;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:3px;
+  }
+  .seg button{
+    border:none;background:transparent;cursor:pointer;font-family:inherit;
+    font-size:13px;padding:7px 16px;border-radius:8px;color:var(--ink-soft);transition:all .15s;
+  }
+  .seg button.active{background:var(--ink);color:#fff;font-weight:500}
+  /* 任务列表 */
+  .list{display:flex;flex-direction:column;gap:10px}
+  .task{
+    display:flex;align-items:flex-start;gap:14px;
+    background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px 18px;transition:all .18s;position:relative;overflow:hidden;
+  }
+  .task:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
+  .task::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px}
+  .task.d1::before{background:var(--morn-clay)}
+  .task.d2::before{background:var(--morn-mist)}
+  .task.d3::before{background:var(--morn-sage)}
+  .task.done{opacity:.55}
+  .task.done .t-title{text-decoration:line-through;color:var(--ink-faint)}
+  .task.alarm-flash{animation:flash 1s ease infinite;border-color:var(--danger)}
+  @keyframes flash{50%{background:#fbf3f2}}
+  .chk{
+    width:20px;height:20px;border-radius:6px;border:2px solid var(--ink-faint);
+    cursor:pointer;flex-shrink:0;margin-top:2px;
+    display:grid;place-items:center;color:transparent;font-size:12px;transition:all .15s;background:transparent;
+  }
+  .chk:hover{border-color:var(--ink)}
+  .chk.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .t-body{flex:1;min-width:0}
+  .t-title{font-size:14.5px;font-weight:600;word-break:break-all}
+  .t-note{font-size:12.5px;color:var(--ink-soft);margin-top:2px;white-space:pre-wrap;word-break:break-all}
+  .t-meta{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+  .tag{
+    font-size:11px;padding:2px 10px;border-radius:999px;font-weight:500;letter-spacing:.5px;
+  }
+  .tag-cat{color:#5d5d5a;background:var(--paper-2);border:1px solid var(--line)}
+  .tag-d1{color:#7d5b50;background:#f0e6e1}
+  .tag-d2{color:#4d6070;background:#e3eaf0}
+  .tag-d3{color:#5c6e52;background:#e8ede4}
+  .t-time{font-size:12px;color:var(--ink-faint);font-variant-numeric:tabular-nums}
+  .t-time.overdue{color:var(--danger);font-weight:600}
+  .t-time.soon{color:var(--blue);font-weight:600}
+  .t-ops{display:flex;gap:2px;flex-shrink:0}
+  .empty{
+    text-align:center;padding:56px 20px;color:var(--ink-faint);
+    background:var(--paper);border:1px dashed var(--line);border-radius:var(--radius);
+  }
+  .empty b{display:block;font-size:15px;color:var(--ink-soft);margin-bottom:4px}
+  /* 提醒弹窗 */
+  .overlay{
+    position:fixed;inset:0;background:rgba(15,15,15,.55);backdrop-filter:blur(4px);
+    display:none;place-items:center;z-index:100;
+  }
+  .overlay.show{display:grid}
+  .alarm-card{
+    background:#fff;border-radius:18px;padding:34px 36px;width:min(420px,90vw);
+    text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.3);
+    animation:pop .35s cubic-bezier(.2,1.4,.4,1);
+  }
+  @keyframes pop{from{transform:scale(.85);opacity:0}}
+  .bell{font-size:44px;animation:ring 1s ease infinite}
+  @keyframes ring{0%,100%{transform:rotate(0)}25%{transform:rotate(14deg)}75%{transform:rotate(-14deg)}}
+  .alarm-card h3{font-size:15px;color:var(--blue);letter-spacing:3px;margin:12px 0 6px}
+  .alarm-card .a-title{font-size:20px;font-weight:700;margin-bottom:6px}
+  .alarm-card .a-time{font-size:13px;color:var(--ink-faint);margin-bottom:22px}
+  .alarm-card .btns{display:flex;gap:10px;justify-content:center}
+  /* toast */
+  #toast{
+    position:fixed;left:50%;bottom:32px;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:#fff;font-size:13px;padding:11px 22px;border-radius:999px;
+    opacity:0;pointer-events:none;transition:all .3s;z-index:120;
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  footer{text-align:center;font-size:12px;color:var(--ink-faint);padding:24px}
+  @media (max-width:820px){
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .form-row{grid-template-columns:1fr 1fr}
+    .form-row .f-title{grid-column:1/-1}
+    .clock{display:none}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <div class="brand">
+      <div class="brand-mark">记</div>
+      <h1>记事<small>IMPORTANT TASKS &amp; REMINDERS</small></h1>
+    </div>
+    <div class="nav-actions">
+      <div class="clock"><b id="clockTime">--:--:--</b><span id="clockDate">—</span></div>
+      <button class="btn btn-ghost btn-sm" id="notifyBtn" title="开启浏览器提醒通知">🔔 开启通知</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- 统计 -->
+  <div class="stats">
+    <div class="stat stat-1"><b id="stTotal">0</b><span>全部事务</span></div>
+    <div class="stat stat-2"><b id="stPending">0</b><span>待办中</span></div>
+    <div class="stat stat-3"><b id="stDone">0</b><span>已完成</span></div>
+    <div class="stat stat-4"><b id="stOverdue">0</b><span>已逾期</span></div>
+  </div>
+
+  <!-- 新建 -->
+  <div class="card">
+    <div class="card-head">
+      <h2>＋ 新建事务</h2>
+      <span class="hint">设置提醒时间后，到点将弹出提醒并播放提示音</span>
+    </div>
+    <div class="form">
+      <div class="form-row">
+        <div class="field f-title">
+          <label>事务标题 *</label>
+          <input type="text" id="fTitle" maxlength="60" placeholder="例如：提交季度报告">
+        </div>
+        <div class="field">
+          <label>提醒时间</label>
+          <input type="datetime-local" id="fTime">
+        </div>
+        <div class="field">
+          <label>分类标签</label>
+          <input type="text" id="fCat" maxlength="10" placeholder="工作 / 生活 / 学习">
+        </div>
+        <div class="field" style="justify-content:flex-end">
+          <label>&nbsp;</label>
+          <button class="btn btn-blue" id="addBtn" style="height:41px;justify-content:center">添加事务</button>
+        </div>
+      </div>
+      <div class="form-row" style="grid-template-columns:2fr 1fr 1fr auto">
+        <div class="field">
+          <label>备注</label>
+          <input type="text" id="fNote" maxlength="120" placeholder="补充说明（可选）">
+        </div>
+        <div class="field" style="grid-column:span 3">
+          <label>优先级</label>
+          <div class="prio-group" id="prioGroup">
+            <button class="prio-opt active" data-p="1"><span class="dot dot-d1"></span>紧急</button>
+            <button class="prio-opt" data-p="2"><span class="dot dot-d2"></span>重要</button>
+            <button class="prio-opt" data-p="3"><span class="dot dot-d3"></span>常规</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 工具栏 -->
+  <div class="toolbar">
+    <div class="search">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="text" id="fSearch" placeholder="搜索标题、备注或标签…">
+    </div>
+    <div class="seg" id="filterSeg">
+      <button data-f="all" class="active">全部</button>
+      <button data-f="pending">待办</button>
+      <button data-f="done">已完成</button>
+    </div>
+    <button class="btn btn-ghost btn-sm" id="clearDone">清空已完成</button>
+  </div>
+
+  <!-- 列表 -->
+  <div class="list" id="list"></div>
+
+</div>
+
+<!-- 闹钟弹窗 -->
+<div class="overlay" id="overlay">
+  <div class="alarm-card" id="alarmCard">
+    <div class="bell">🔔</div>
+    <h3>时间到啦</h3>
+    <div class="a-title" id="alTitle"></div>
+    <div class="a-time" id="alTime"></div>
+    <div class="btns">
+      <button class="btn btn-dark" id="alSnooze">稍后 5 分钟</button>
+      <button class="btn btn-blue" id="alOk">知道了</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<footer>数据保存在本机浏览器（localStorage）· 请保持页面打开以便提醒生效</footer>
+
+<script>
+(function(){
+  "use strict";
+  const KEY = "memo-tasks-v1";
+  const PRIO = {
+    1:{name:"紧急", cls:"d1", tag:"tag-d1"},
+    2:{name:"重要", cls:"d2", tag:"tag-d2"},
+    3:{name:"常规", cls:"d3", tag:"tag-d3"}
+  };
+  let tasks = [];
+  try{ tasks = JSON.parse(localStorage.getItem(KEY)) || []; }catch(e){ tasks = []; }
+  let filter = "all", keyword = "", curPrio = 1;
+  let firedIds = new Set();      // 已提醒的事务实例（id+触发时间）
+  let ringingTask = null;
+  let audioTimer = null;
+
+  /* ---------- 工具 ---------- */
+  const $ = id => document.getElementById(id);
+  const pad = n => String(n).padStart(2,"0");
+  const esc = s => s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  function save(){ localStorage.setItem(KEY, JSON.stringify(tasks)); }
+  function toast(msg){
+    const t = $("toast"); t.textContent = msg; t.classList.add("show");
+    clearTimeout(t._tm); t._tm = setTimeout(()=>t.classList.remove("show"), 2200);
+  }
+  function fmt(ts){
+    const d = new Date(ts);
+    return `${d.getMonth()+1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  function toLocalInput(ts){
+    const d = new Date(ts);
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  /* ---------- 时钟 ---------- */
+  const WEEK = ["日","一","二","三","四","五","六"];
+  function tickClock(){
+    const d = new Date();
+    $("clockTime").textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    $("clockDate").textContent = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 · 星期${WEEK[d.getDay()]}`;
+  }
+  setInterval(tickClock, 1000); tickClock();
+
+  /* ---------- 提示音（Web Audio，无需外部文件） ---------- */
+  let audioCtx = null;
+  function beep(){
+    try{
+      audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+      const seq = [880, 660, 880, 660];
+      seq.forEach((f, i)=>{
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = "sine"; o.frequency.value = f;
+        o.connect(g); g.connect(audioCtx.destination);
+        const t0 = audioCtx.currentTime + i*0.28;
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(0.25, t0+0.03);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0+0.25);
+        o.start(t0); o.stop(t0+0.26);
+      });
+    }catch(e){}
+  }
+
+  /* ---------- 浏览器通知 ---------- */
+  function askNotify(){
+    if(!("Notification" in window)){ toast("当前浏览器不支持通知"); return; }
+    if(Notification.permission === "granted"){ toast("通知已开启"); return; }
+    Notification.requestPermission().then(p=>{
+      toast(p === "granted" ? "通知已开启" : "未授权通知，仅页面内提醒");
+    });
+  }
+  function sysNotify(task){
+    if("Notification" in window && Notification.permission === "granted"){
+      try{ new Notification("⏰ 事务提醒：" + task.title, { body: task.note || "别忘记这件重要事务", tag: task.id }); }catch(e){}
+    }
+  }
+
+  /* ---------- 闹钟逻辑 ---------- */
+  function checkAlarms(){
+    if(ringingTask) return;
+    const now = Date.now();
+    for(const t of tasks){
+      if(t.done || !t.time) continue;
+      const key = t.id + "@" + t.time;
+      if(t.time <= now && !firedIds.has(key)){
+        firedIds.add(key);
+        ringAlarm(t);
+        return;
+      }
+    }
+  }
+  function ringAlarm(t){
+    ringingTask = t;
+    $("alTitle").textContent = t.title;
+    $("alTime").textContent = "设定时间：" + fmt(t.time);
+    $("overlay").classList.add("show");
+    sysNotify(t);
+    beep();
+    audioTimer = setInterval(beep, 2600);
+    render();
+  }
+  function stopRing(){
+    clearInterval(audioTimer); audioTimer = null;
+    $("overlay").classList.remove("show");
+    ringingTask = null;
+    render();
+  }
+  $("alOk").addEventListener("click", stopRing);
+  $("alSnooze").addEventListener("click", ()=>{
+    if(ringingTask){
+      ringingTask.time = Date.now() + 5*60*1000;
+      save(); toast("已延后 5 分钟提醒");
+    }
+    stopRing();
+  });
+  setInterval(checkAlarms, 1000);
+
+  /* ---------- 渲染 ---------- */
+  function timeLabel(t){
+    if(!t.time) return "";
+    const diff = t.time - Date.now();
+    let cls = "", txt = fmt(t.time);
+    if(t.done) return `<span class="t-time">${txt}</span>`;
+    if(diff < 0){ cls = "overdue"; txt += " · 已逾期"; }
+    else if(diff < 60*60*1000){ cls = "soon"; txt += " · 即将到来"; }
+    return `<span class="t-time ${cls}">⏰ ${txt}</span>`;
+  }
+  function render(){
+    // 统计
+    $("stTotal").textContent = tasks.length;
+    $("stPending").textContent = tasks.filter(t=>!t.done).length;
+    $("stDone").textContent = tasks.filter(t=>t.done).length;
+    $("stOverdue").textContent = tasks.filter(t=>!t.done && t.time && t.time < Date.now()).length;
+
+    // 列表
+    const kw = keyword.trim().toLowerCase();
+    let arr = tasks.filter(t=>{
+      if(filter==="pending" && t.done) return false;
+      if(filter==="done" && !t.done) return false;
+      if(kw){
+        const s = (t.title+" "+(t.note||"")+" "+(t.cat||"")).toLowerCase();
+        if(!s.includes(kw)) return false;
+      }
+      return true;
+    });
+    arr.sort((a,b)=>{
+      if(a.done !== b.done) return a.done ? 1 : -1;
+      return (a.time||Infinity) - (b.time||Infinity);
+    });
+
+    const list = $("list");
+    if(!arr.length){
+      list.innerHTML = `<div class="empty"><b>暂无事务</b>在上方添加你的第一条重要事务吧</div>`;
+      return;
+    }
+    list.innerHTML = arr.map(t=>{
+      const p = PRIO[t.prio] || PRIO[3];
+      const now = Date.now();
+      const flash = (!t.done && t.time && t.time <= now && t.time > now - 2*60*1000) ? " alarm-flash" : "";
+      return `<div class="task ${p.cls}${t.done?" done":""}${flash}" data-id="${t.id}">
+        <button class="chk ${t.done?"on":""}" data-act="toggle" title="${t.done?"标记为待办":"标记完成"}">✓</button>
+        <div class="t-body">
+          <div class="t-title">${esc(t.title)}</div>
+          ${t.note ? `<div class="t-note">${esc(t.note)}</div>` : ""}
+          <div class="t-meta">
+            <span class="tag ${p.tag}">${p.name}</span>
+            ${t.cat ? `<span class="tag tag-cat">${esc(t.cat)}</span>` : ""}
+            ${timeLabel(t)}
+          </div>
+        </div>
+        <div class="t-ops">
+          <button class="icon-btn" data-act="edit" title="编辑">✎</button>
+          <button class="icon-btn" data-act="del" title="删除">✕</button>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  /* ---------- 增删改 ---------- */
+  function addTask(){
+    const title = $("fTitle").value.trim();
+    if(!title){ $("fTitle").focus(); toast("请填写事务标题"); return; }
+    const time = $("fTime").value ? new Date($("fTime").value).getTime() : null;
+    tasks.unshift({
+      id: Date.now() + "" + Math.floor(Math.random()*1e4),
+      title, note: $("fNote").value.trim(),
+      cat: $("fCat").value.trim(),
+      time, prio: curPrio, done: false, created: Date.now()
+    });
+    $("fTitle").value = ""; $("fNote").value = ""; $("fCat").value = ""; $("fTime").value = "";
+    save(); render();
+    toast(time ? "已添加，将在设定时间提醒你" : "已添加");
+  }
+  $("addBtn").addEventListener("click", addTask);
+  $("fTitle").addEventListener("keydown", e=>{ if(e.key==="Enter") addTask(); });
+
+  $("list").addEventListener("click", e=>{
+    const btn = e.target.closest("[data-act]");
+    if(!btn) return;
+    const id = btn.closest(".task").dataset.id;
+    const t = tasks.find(x=>x.id===id);
+    if(!t) return;
+    const act = btn.dataset.act;
+    if(act==="toggle"){
+      t.done = !t.done;
+      if(t.done && ringingTask && ringingTask.id===t.id) stopRing();
+      save(); render();
+    }else if(act==="del"){
+      if(confirm("确定删除「"+t.title+"」吗？")){
+        tasks = tasks.filter(x=>x.id!==id);
+        save(); render(); toast("已删除");
+      }
+    }else if(act==="edit"){
+      const nt = prompt("修改事务标题：", t.title);
+      if(nt===null) return;
+      const nt2 = nt.trim();
+      if(nt2){ t.title = nt2; save(); render(); }
+      const nnote = prompt("修改备注（可留空）：", t.note||"");
+      if(nnote!==null){ t.note = nnote.trim(); }
+      const ntime = prompt("修改提醒时间（格式 2026-09-20 14:30，留空取消提醒）：",
+        t.time ? toLocalInput(t.time).replace("T"," ") : "");
+      if(ntime!==null){
+        const s = ntime.trim().replace("T"," ");
+        if(!s){ t.time = null; }
+        else{
+          const d = new Date(s.replace(" ","T"));
+          t.time = isNaN(d) ? t.time : d.getTime();
+        }
+      }
+      const np = prompt("优先级：1=紧急 2=重要 3=常规", t.prio);
+      if(np && ["1","2","3"].includes(np.trim())) t.prio = +np.trim();
+      save(); render(); toast("已更新");
+    }
+  });
+
+  /* ---------- 筛选 ---------- */
+  $("filterSeg").addEventListener("click", e=>{
+    const b = e.target.closest("button"); if(!b) return;
+    filter = b.dataset.f;
+    [...$("filterSeg").children].forEach(x=>x.classList.toggle("active", x===b));
+    render();
+  });
+  $("fSearch").addEventListener("input", e=>{ keyword = e.target.value; render(); });
+  $("clearDone").addEventListener("click", ()=>{
+    const n = tasks.filter(t=>t.done).length;
+    if(!n){ toast("没有已完成的事务"); return; }
+    if(confirm("清空全部 "+n+" 条已完成事务？")){
+      tasks = tasks.filter(t=>!t.done);
+      save(); render(); toast("已清空");
+    }
+  });
+
+  /* ---------- 优先级选择 ---------- */
+  $("prioGroup").addEventListener("click", e=>{
+    const b = e.target.closest(".prio-opt"); if(!b) return;
+    curPrio = +b.dataset.p;
+    [...$("prioGroup").children].forEach(x=>x.classList.toggle("active", x===b));
+  });
+
+  $("notifyBtn").addEventListener("click", askNotify);
+
+  // 默认提醒时间：1 小时后
+  $("fTime").value = toLocalInput(Date.now() + 3600*1000);
+  render();
+})();
+</script>
+</body>
+</html>
